@@ -48,6 +48,13 @@ export const ConfigService = {
             return { success: true };
         } catch (error) {
             console.error('Error saving allowed regions:', error);
+            if (error.message?.includes('relation "public.app_settings" does not exist') ||
+                error.code === '42P01') {
+                return {
+                    success: false,
+                    error: "La tabla de configuración no existe. Por favor ejecuta el script supabase_setup.sql en tu panel de Supabase."
+                };
+            }
             return { success: false, error: error.message };
         }
     }

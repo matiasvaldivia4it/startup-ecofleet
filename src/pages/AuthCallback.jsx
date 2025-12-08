@@ -39,6 +39,22 @@ function AuthCallback() {
                         return;
                     }
 
+                    if (pendingRole === 'customer') {
+                        // User was trying to register as customer
+                        localStorage.removeItem('pending_registration_role');
+
+                        // Ensure user has customer role in metadata
+                        if (user.user_metadata?.role !== 'customer') {
+                            await supabase.auth.updateUser({
+                                data: { role: 'customer' }
+                            });
+                        }
+
+                        // Redirect back to registration to finish the form
+                        navigate('/registro-cliente');
+                        return;
+                    }
+
                     // Normal login flow - check role
                     const role = user.user_metadata?.role || 'customer';
 

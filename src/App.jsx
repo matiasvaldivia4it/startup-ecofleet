@@ -4,6 +4,7 @@ import { OrderProvider } from './context/OrderContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import LandingPage from './pages/LandingPage';
 import DriverRegistration from './pages/DriverRegistration';
+import CustomerRegistration from './pages/CustomerRegistration';
 import Dashboard from './pages/Dashboard';
 import Admin from './pages/Admin';
 import CustomerPortal from './pages/CustomerPortal';
@@ -18,6 +19,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/registro-conductor" element={<DriverRegistration />} />
+          <Route path="/registro-cliente" element={<CustomerRegistration />} />
           <Route path="/login" element={<Login />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/api-docs" element={<ApiDocs />} />
