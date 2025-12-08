@@ -1,173 +1,203 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Footer from '../components/Footer';
 
 function Dashboard() {
-    // In a real app, this would fetch user data from backend
-    const driverData = {
-        name: 'Juan Pérez',
-        status: 'pending',
-        applicationDate: '2025-12-06',
-        profileCompletion: 100
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
     };
 
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'pending':
-                return <span className="badge badge-warning">Pendiente de Revisión</span>;
-            case 'approved':
-                return <span className="badge badge-success">Aprobado</span>;
-            case 'rejected':
-                return <span className="badge badge-error">Rechazado</span>;
-            default:
-                return <span className="badge badge-info">En Proceso</span>;
-        }
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
+  }, []);
 
-    return (
-        <div className="dashboard-page">
-            <header className="dashboard-header">
-                <div className="container">
-                    <Link to="/" className="logo-link">
-                        <h2 className="logo">
-                            <span className="text-gradient">EcoFleet</span> Chile
-                        </h2>
-                    </Link>
-                    <nav className="dashboard-nav">
-                        <Link to="/" className="nav-link">Inicio</Link>
-                        <Link to="/dashboard" className="nav-link active">Dashboard</Link>
-                    </nav>
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
+
+  // In a real app, this would fetch user data from backend
+  const driverData = {
+    name: 'Juan Pérez',
+    status: 'pending',
+    applicationDate: '2025-12-06',
+    profileCompletion: 100
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'pending':
+        return <span className="badge badge-warning">Pendiente de Revisión</span>;
+      case 'approved':
+        return <span className="badge badge-success">Aprobado</span>;
+      case 'rejected':
+        return <span className="badge badge-error">Rechazado</span>;
+      default:
+        return <span className="badge badge-info">En Proceso</span>;
+    }
+  };
+
+  return (
+    <div className="dashboard-page">
+      <header className="dashboard-header">
+        <div className="container">
+          <Link to="/" className="logo-link">
+            <h2 className="logo">
+              <span className="text-gradient">EcoFleet</span> Chile
+            </h2>
+          </Link>
+          <nav className="dashboard-nav">
+            <Link to="/" className="nav-link">Inicio</Link>
+            <Link to="/dashboard" className="nav-link active">Dashboard</Link>
+            {deferredPrompt && (
+              <button onClick={handleInstallClick} className="btn btn-primary btn-sm btn-install">
+                📱 Instalar App
+              </button>
+            )}
+          </nav>
+        </div>
+      </header>
+
+      <section className="dashboard-section">
+        <div className="container">
+          <div className="dashboard-welcome">
+            <h1 className="welcome-title">¡Bienvenido, {driverData.name}! 👋</h1>
+            <p className="welcome-subtitle">
+              Aquí puedes ver el estado de tu solicitud y gestionar tu perfil
+            </p>
+          </div>
+
+          <div className="dashboard-grid">
+            <div className="dashboard-card card">
+              <div className="card-header">
+                <h3 className="card-title">Estado de Solicitud</h3>
+                {getStatusBadge(driverData.status)}
+              </div>
+              <div className="card-content">
+                <div className="status-info">
+                  <div className="info-item">
+                    <span className="info-label">Fecha de Solicitud:</span>
+                    <span className="info-value">{new Date(driverData.applicationDate).toLocaleDateString('es-CL')}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Completitud del Perfil:</span>
+                    <span className="info-value">{driverData.profileCompletion}%</span>
+                  </div>
                 </div>
-            </header>
 
-            <section className="dashboard-section">
-                <div className="container">
-                    <div className="dashboard-welcome">
-                        <h1 className="welcome-title">¡Bienvenido, {driverData.name}! 👋</h1>
-                        <p className="welcome-subtitle">
-                            Aquí puedes ver el estado de tu solicitud y gestionar tu perfil
-                        </p>
-                    </div>
-
-                    <div className="dashboard-grid">
-                        <div className="dashboard-card card">
-                            <div className="card-header">
-                                <h3 className="card-title">Estado de Solicitud</h3>
-                                {getStatusBadge(driverData.status)}
-                            </div>
-                            <div className="card-content">
-                                <div className="status-info">
-                                    <div className="info-item">
-                                        <span className="info-label">Fecha de Solicitud:</span>
-                                        <span className="info-value">{new Date(driverData.applicationDate).toLocaleDateString('es-CL')}</span>
-                                    </div>
-                                    <div className="info-item">
-                                        <span className="info-label">Completitud del Perfil:</span>
-                                        <span className="info-value">{driverData.profileCompletion}%</span>
-                                    </div>
-                                </div>
-
-                                <div className="progress-bar-container">
-                                    <div className="progress-bar-fill" style={{ width: `${driverData.profileCompletion}%` }}></div>
-                                </div>
-
-                                {driverData.status === 'pending' && (
-                                    <div className="status-message">
-                                        <p>
-                                            Tu solicitud está siendo revisada por nuestro equipo.
-                                            Te notificaremos por email cuando tengamos una respuesta.
-                                        </p>
-                                        <p className="estimated-time">
-                                            ⏱️ Tiempo estimado de revisión: 24-48 horas
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="dashboard-card card">
-                            <div className="card-header">
-                                <h3 className="card-title">Próximos Pasos</h3>
-                            </div>
-                            <div className="card-content">
-                                <ul className="steps-list">
-                                    <li className="step-item completed">
-                                        <span className="step-icon">✓</span>
-                                        <span>Completar formulario de registro</span>
-                                    </li>
-                                    <li className="step-item active">
-                                        <span className="step-icon">⏳</span>
-                                        <span>Esperar verificación de documentos</span>
-                                    </li>
-                                    <li className="step-item">
-                                        <span className="step-icon">○</span>
-                                        <span>Completar capacitación online</span>
-                                    </li>
-                                    <li className="step-item">
-                                        <span className="step-icon">○</span>
-                                        <span>Activar cuenta y comenzar a entregar</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div className="dashboard-card card">
-                            <div className="card-header">
-                                <h3 className="card-title">Información del Perfil</h3>
-                            </div>
-                            <div className="card-content">
-                                <div className="profile-info">
-                                    <div className="profile-avatar">
-                                        <div className="avatar-circle">
-                                            {driverData.name.charAt(0)}
-                                        </div>
-                                    </div>
-                                    <div className="profile-details">
-                                        <h4>{driverData.name}</h4>
-                                        <p>Conductor en Proceso</p>
-                                    </div>
-                                </div>
-                                <Link to="/registro-conductor" className="btn btn-outline btn-sm">
-                                    Editar Perfil
-                                </Link>
-                            </div>
-                        </div>
-
-                        <div className="dashboard-card card">
-                            <div className="card-header">
-                                <h3 className="card-title">Recursos Útiles</h3>
-                            </div>
-                            <div className="card-content">
-                                <ul className="resources-list">
-                                    <li>
-                                        <a href="#" className="resource-link">
-                                            📚 Centro de Ayuda
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="#" className="resource-link">
-                                            📖 Guía del Conductor
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="#" className="resource-link">
-                                            💬 Comunidad de Conductores
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a href="#" className="resource-link">
-                                            📞 Soporte Técnico
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+                <div className="progress-bar-container">
+                  <div className="progress-bar-fill" style={{ width: `${driverData.profileCompletion}%` }}></div>
                 </div>
-            </section>
 
-            <Footer />
+                {driverData.status === 'pending' && (
+                  <div className="status-message">
+                    <p>
+                      Tu solicitud está siendo revisada por nuestro equipo.
+                      Te notificaremos por email cuando tengamos una respuesta.
+                    </p>
+                    <p className="estimated-time">
+                      ⏱️ Tiempo estimado de revisión: 24-48 horas
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
 
-            <style jsx>{`
+            <div className="dashboard-card card">
+              <div className="card-header">
+                <h3 className="card-title">Próximos Pasos</h3>
+              </div>
+              <div className="card-content">
+                <ul className="steps-list">
+                  <li className="step-item completed">
+                    <span className="step-icon">✓</span>
+                    <span>Completar formulario de registro</span>
+                  </li>
+                  <li className="step-item active">
+                    <span className="step-icon">⏳</span>
+                    <span>Esperar verificación de documentos</span>
+                  </li>
+                  <li className="step-item">
+                    <span className="step-icon">○</span>
+                    <span>Completar capacitación online</span>
+                  </li>
+                  <li className="step-item">
+                    <span className="step-icon">○</span>
+                    <span>Activar cuenta y comenzar a entregar</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="dashboard-card card">
+              <div className="card-header">
+                <h3 className="card-title">Información del Perfil</h3>
+              </div>
+              <div className="card-content">
+                <div className="profile-info">
+                  <div className="profile-avatar">
+                    <div className="avatar-circle">
+                      {driverData.name.charAt(0)}
+                    </div>
+                  </div>
+                  <div className="profile-details">
+                    <h4>{driverData.name}</h4>
+                    <p>Conductor en Proceso</p>
+                  </div>
+                </div>
+                <Link to="/registro-conductor" className="btn btn-outline btn-sm">
+                  Editar Perfil
+                </Link>
+              </div>
+            </div>
+
+            <div className="dashboard-card card">
+              <div className="card-header">
+                <h3 className="card-title">Recursos Útiles</h3>
+              </div>
+              <div className="card-content">
+                <ul className="resources-list">
+                  <li>
+                    <a href="#" className="resource-link">
+                      📚 Centro de Ayuda
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="resource-link">
+                      📖 Guía del Conductor
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="resource-link">
+                      💬 Comunidad de Conductores
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="resource-link">
+                      📞 Soporte Técnico
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+
+      <style jsx>{`
         .dashboard-page {
           min-height: 100vh;
           background: var(--color-gray-50);
@@ -413,12 +443,44 @@ function Dashboard() {
           }
           
           .dashboard-nav {
-            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: var(--space-4);
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            z-index: 1000;
+          }
+
+          .nav-link {
+            font-size: var(--font-size-sm);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+          }
+
+          .btn-install {
+            position: fixed;
+            top: var(--space-4);
+            right: var(--space-4);
+            z-index: 1001;
+            box-shadow: var(--shadow-lg);
+            animation: bounce 2s infinite;
           }
         }
+
+        @keyframes bounce {
+          0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+          40% {transform: translateY(-10px);}
+          60% {transform: translateY(-5px);}
+        }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }
 
 export default Dashboard;
