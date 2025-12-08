@@ -7,14 +7,26 @@ function Login() {
   const [searchParams] = useSearchParams();
   const { signInWithGoogle, signInWithMicrosoft, signInWithFacebook, login, isAuthenticated, loading } = useAuth();
 
-  const redirectTo = searchParams.get('redirect') || '/customer';
+  const redirectTo = searchParams.get('redirect');
 
   useEffect(() => {
     // If already authenticated, redirect
-    if (isAuthenticated && !loading) {
-      navigate(redirectTo, { replace: true });
+    if (isAuthenticated && !loading && user) {
+      if (redirectTo) {
+        navigate(redirectTo, { replace: true });
+      } else {
+        // Default redirect based on role
+        const role = user.user_metadata?.role || 'customer';
+        if (role === 'driver') {
+          navigate('/dashboard', { replace: true });
+        } else if (role === 'admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/customer', { replace: true });
+        }
+      }
     }
-  }, [isAuthenticated, loading, navigate, redirectTo]);
+  }, [isAuthenticated, loading, navigate, redirectTo, user]);
 
   const handleGoogleLogin = async () => {
     try {

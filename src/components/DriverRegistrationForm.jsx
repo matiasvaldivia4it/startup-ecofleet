@@ -232,6 +232,8 @@ function DriverRegistrationForm() {
 
     const handleGoogleRegister = async () => {
         try {
+            // Store intention to register as driver
+            localStorage.setItem('pending_registration_role', 'driver');
             await signInWithGoogle();
             // The redirect will handle the rest
         } catch (error) {

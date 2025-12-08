@@ -69,7 +69,8 @@ export const AuthProvider = ({ children }) => {
         const mockUser = {
             id: 'dev-user-123',
             email: email,
-            role: role,
+            user_metadata: { role: role, full_name: 'Usuario Demo' },
+            role: role, // Keep top level for backward compat if needed
             name: 'Usuario Demo'
         };
         setUser(mockUser);

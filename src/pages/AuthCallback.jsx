@@ -18,8 +18,37 @@ function AuthCallback() {
                 }
 
                 if (data.session) {
-                    // Successfully authenticated, redirect to customer portal
-                    navigate('/customer', { replace: true });
+                    const user = data.session.user;
+
+                    // Check for pending registration flow
+                    const pendingRole = localStorage.getItem('pending_registration_role');
+
+                    if (pendingRole === 'driver') {
+                        // User was trying to register as driver
+                        localStorage.removeItem('pending_registration_role');
+
+                        // Ensure user has driver role in metadata
+                        if (user.user_metadata?.role !== 'driver') {
+                            await supabase.auth.updateUser({
+                                data: { role: 'driver' }
+                            });
+                        }
+
+                        // Redirect back to registration to finish the form
+                        navigate('/registro-conductor');
+                        return;
+                    }
+
+                    // Normal login flow - check role
+                    const role = user.user_metadata?.role || 'customer';
+
+                    if (role === 'driver') {
+                        navigate('/dashboard', { replace: true });
+                    } else if (role === 'admin') {
+                        navigate('/admin', { replace: true });
+                    } else {
+                        navigate('/customer', { replace: true });
+                    }
                 } else {
                     navigate('/login');
                 }
