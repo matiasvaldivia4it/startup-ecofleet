@@ -77,6 +77,56 @@ export const AuthProvider = ({ children }) => {
         return { success: true };
     };
 
+    // Register new user
+    const register = async (email, password, userData) => {
+        if (!supabase) {
+            // Mock registration
+            const mockUser = {
+                id: `dev-user-${Date.now()}`,
+                email: email,
+                role: 'driver', // Default to driver for this flow
+                name: userData.fullName,
+                user_metadata: userData
+            };
+            setUser(mockUser);
+            setSession({ user: mockUser });
+            return { success: true, user: mockUser };
+        }
+
+        try {
+            // 1. Sign up with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: userData.fullName,
+                        role: 'driver',
+                        ...userData
+                    }
+                }
+            });
+
+            if (authError) throw authError;
+
+            if (authData.user) {
+                // 2. Ideally create a profile record here if you have a profiles table
+                // const { error: profileError } = await supabase.from('profiles').insert({...})
+
+                // For now, we rely on metadata or triggers
+                setUser(authData.user);
+                setSession(authData.session);
+                return { success: true, user: authData.user };
+            }
+
+            return { success: false, error: 'No user created' };
+
+        } catch (error) {
+            console.error('Registration error:', error);
+            return { success: false, error: error.message };
+        }
+    };
+
     // Sign out
     const signOut = async () => {
         if (!supabase) return;
@@ -111,6 +161,7 @@ export const AuthProvider = ({ children }) => {
         signInWithMicrosoft,
         signInWithFacebook,
         login,
+        register,
         signOut,
         getUserProfile,
         isAuthenticated: !!user,
