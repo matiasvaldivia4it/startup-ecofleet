@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import VideoCarousel from './VideoCarousel';
 
 function Hero() {
   return (
@@ -14,20 +15,31 @@ function Hero() {
               Únete a la revolución del delivery sustentable en Chile. Conduce vehículos eléctricos,
               gana dinero y ayuda a construir un futuro más limpio para todos.
             </p>
-            <div className="hero-cta">
-              <Link to="/registro-conductor" className="btn btn-primary btn-lg">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M10 5V15M5 10H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                Regístrate como Conductor
-              </Link>
-              <Link to="/customer" className="btn btn-secondary btn-lg">
-                📦 Portal Cliente
-              </Link>
-              <a href="#como-funciona" className="btn btn-outline btn-lg">
-                Conocer Más
-              </a>
+
+            <div className="hero-actions">
+              <div className="primary-actions">
+                <Link to="/registro-conductor" className="btn btn-primary btn-xl pulse-animation">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 14C20.49 14 22 15.51 22 17V20C22 21.1 21.1 22 20 22H4C2.9 22 2 21.1 2 20V17C2 15.51 3.51 14 5 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeJoin="round" />
+                    <path d="M12 14V4M12 4L15 7M12 4L9 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeJoin="round" />
+                  </svg>
+                  Regístrate como Conductor
+                </Link>
+              </div>
+
+              <div className="secondary-actions">
+                <span className="action-label">¿Ya tienes cuenta?</span>
+                <div className="portal-buttons">
+                  <Link to="/customer" className="btn btn-secondary">
+                    📦 Portal Cliente
+                  </Link>
+                  <Link to="/dashboard" className="btn btn-secondary">
+                    🚚 Portal Conductor
+                  </Link>
+                </div>
+              </div>
             </div>
+
             <div className="hero-stats">
               <div className="stat-item">
                 <div className="stat-icon">🌱</div>
@@ -52,32 +64,9 @@ function Hero() {
               </div>
             </div>
           </div>
-          <div className="hero-image animate-float">
-            <div className="hero-illustration">
-              <div className="electric-vehicle">
-                <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  {/* Electric Delivery Van */}
-                  <rect x="80" y="120" width="240" height="120" rx="20" fill="url(#gradient1)" />
-                  <rect x="100" y="140" width="80" height="60" rx="8" fill="#fff" opacity="0.3" />
-                  <rect x="220" y="140" width="80" height="60" rx="8" fill="#fff" opacity="0.3" />
-                  <circle cx="140" cy="240" r="25" fill="#1f2937" />
-                  <circle cx="140" cy="240" r="15" fill="#6b7280" />
-                  <circle cx="280" cy="240" r="25" fill="#1f2937" />
-                  <circle cx="280" cy="240" r="15" fill="#6b7280" />
-                  {/* Lightning bolt */}
-                  <path d="M200 160 L190 180 L200 180 L190 200 L210 180 L200 180 Z" fill="#fbbf24" />
-                  {/* Leaf decoration */}
-                  <path d="M50 80 Q70 60 90 80 Q70 100 50 80" fill="#10b981" />
-                  <path d="M330 60 Q350 40 370 60 Q350 80 330 60" fill="#10b981" />
-                  <defs>
-                    <linearGradient id="gradient1" x1="80" y1="120" x2="320" y2="240">
-                      <stop offset="0%" stopColor="#10b981" />
-                      <stop offset="100%" stopColor="#059669" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </div>
-            </div>
+
+          <div className="hero-visual animate-float">
+            <VideoCarousel />
           </div>
         </div>
       </div>
@@ -138,17 +127,58 @@ function Hero() {
           line-height: 1.6;
         }
         
-        .hero-cta {
+        .hero-actions {
+          margin-bottom: var(--space-12);
+        }
+
+        .primary-actions {
+          margin-bottom: var(--space-6);
+        }
+
+        .btn-xl {
+          font-size: 1.25rem;
+          padding: 1rem 2rem;
+          display: inline-flex;
+          align-items: center;
+          gap: var(--space-3);
+          box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .pulse-animation {
+          animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+          70% { box-shadow: 0 0 0 15px rgba(16, 185, 129, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .secondary-actions {
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-2);
+        }
+
+        .action-label {
+          font-size: var(--font-size-sm);
+          font-weight: 600;
+          color: var(--color-gray-500);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .portal-buttons {
           display: flex;
           gap: var(--space-4);
-          margin-bottom: var(--space-12);
-          flex-wrap: wrap;
         }
         
         .hero-stats {
           display: flex;
           gap: var(--space-8);
           flex-wrap: wrap;
+          padding-top: var(--space-8);
+          border-top: 1px solid rgba(0,0,0,0.05);
         }
         
         .stat-item {
@@ -172,43 +202,51 @@ function Hero() {
           color: var(--color-gray-600);
         }
         
-        .hero-illustration {
+        .hero-visual {
           width: 100%;
-          max-width: 400px;
+          max-width: 600px;
           margin: 0 auto;
         }
         
-        .electric-vehicle svg {
-          width: 100%;
-          height: auto;
-          filter: drop-shadow(0 20px 40px rgba(16, 185, 129, 0.2));
-        }
-        
-        @media (max-width: 768px) {
-          .hero-section {
-            min-height: auto;
-            padding: var(--space-12) 0;
-          }
-          
+        @media (max-width: 1024px) {
           .hero-content {
             grid-template-columns: 1fr;
-            gap: var(--space-8);
+            text-align: center;
+            gap: var(--space-12);
           }
-          
+
+          .hero-text {
+            margin: 0 auto;
+          }
+
+          .hero-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .portal-buttons {
+            justify-content: center;
+          }
+
+          .hero-stats {
+            justify-content: center;
+          }
+        }
+
+        @media (max-width: 640px) {
           .hero-title {
             font-size: var(--font-size-4xl);
           }
           
-          .hero-subtitle {
-            font-size: var(--font-size-lg);
-          }
-          
-          .hero-cta {
+          .portal-buttons {
             flex-direction: column;
-          }
-          
-          .hero-cta .btn {
             width: 100%;
+          }
+
+          .btn {
+            width: 100%;
+            justify-content: center;
           }
         }
       `}</style>
