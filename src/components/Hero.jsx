@@ -25,6 +25,13 @@ function Hero() {
                   </svg>
                   Regístrate como Conductor
                 </Link>
+                <Link to="/registro-cliente" className="btn btn-electric btn-xl">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 3h18v18H3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeJoin="round" />
+                    <path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeJoin="round" />
+                  </svg>
+                  Regístrate como Cliente
+                </Link>
               </div>
 
               <div className="secondary-actions">
@@ -133,6 +140,9 @@ function Hero() {
 
         .primary-actions {
           margin-bottom: var(--space-6);
+          display: flex;
+          flex-direction: column;
+          gap: var(--space-4);
         }
 
         .btn-xl {

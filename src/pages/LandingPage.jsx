@@ -10,14 +10,7 @@ function LandingPage() {
     return (
         <div className="landing-page">
             <Hero />
-            <div className="hero-buttons">
-                <Link to="/registro-cliente" className="btn btn-primary btn-lg">
-                    Registrar mi Negocio
-                </Link>
-                <Link to="/registro-conductor" className="btn btn-outline btn-lg">
-                    Ser Conductor
-                </Link>
-            </div>
+
             <Features />
             <HowItWorks />
             <Stats />
