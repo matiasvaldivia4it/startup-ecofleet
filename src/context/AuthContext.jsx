@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { mockApi } from '../api/mockApi';
+import { supabase } from '../lib/supabaseClient';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext({});
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
@@ -13,115 +13,93 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [userType, setUserType] = useState(null); // 'customer', 'driver', 'admin'
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [session, setSession] = useState(null);
 
-    // Load user from localStorage on mount
     useEffect(() => {
-        const savedUser = localStorage.getItem('ecofleet_user');
-        const savedUserType = localStorage.getItem('ecofleet_user_type');
-
-        if (savedUser && savedUserType) {
-            setUser(JSON.parse(savedUser));
-            setUserType(savedUserType);
-            setIsAuthenticated(true);
+        // Check if Supabase is configured
+        if (!supabase) {
+            console.warn('Supabase not configured. Using mock authentication.');
+            setLoading(false);
+            return;
         }
-        setIsLoading(false);
+
+        // Get initial session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session);
+            setUser(session?.user ?? null);
+            setLoading(false);
+        });
+
+        // Listen for auth changes
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+            setUser(session?.user ?? null);
+            setLoading(false);
+        });
+
+        return () => subscription.unsubscribe();
     }, []);
 
-    const login = async (email, password, type = 'customer') => {
-        try {
-            const result = await mockApi.auth.login(email, password);
-
-            if (result.success) {
-                setUser(result.data.user);
-                setUserType(type);
-                setIsAuthenticated(true);
-
-                // Save to localStorage
-                localStorage.setItem('ecofleet_user', JSON.stringify(result.data.user));
-                localStorage.setItem('ecofleet_user_type', type);
-                localStorage.setItem('ecofleet_token', result.data.token);
-
-                return { success: true };
-            }
-
-            return { success: false, error: result.error };
-        } catch (error) {
-            return { success: false, error: 'Error al iniciar sesión' };
-        }
-    };
-
-    const register = async (customerData) => {
-        try {
-            const result = await mockApi.auth.register(customerData);
-
-            if (result.success) {
-                setUser(result.data.user);
-                setUserType('customer');
-                setIsAuthenticated(true);
-
-                // Save to localStorage
-                localStorage.setItem('ecofleet_user', JSON.stringify(result.data.user));
-                localStorage.setItem('ecofleet_user_type', 'customer');
-                localStorage.setItem('ecofleet_token', result.data.token);
-
-                return { success: true, data: result.data };
-            }
-
-            return { success: false, error: result.error };
-        } catch (error) {
-            return { success: false, error: 'Error al registrarse' };
-        }
-    };
-
-    const logout = () => {
-        setUser(null);
-        setUserType(null);
-        setIsAuthenticated(false);
-
-        // Clear localStorage
-        localStorage.removeItem('ecofleet_user');
-        localStorage.removeItem('ecofleet_user_type');
-        localStorage.removeItem('ecofleet_token');
-    };
-
-    const updateUser = (userData) => {
-        setUser(userData);
-        localStorage.setItem('ecofleet_user', JSON.stringify(userData));
-    };
-
-    const generateApiKey = async () => {
-        if (!user || userType !== 'customer') {
-            return { success: false, error: 'No autorizado' };
+    // Sign in with OAuth provider
+    const signInWithProvider = async (provider) => {
+        if (!supabase) {
+            throw new Error('Supabase not configured');
         }
 
-        try {
-            const result = await mockApi.auth.generateApiKey(user.id);
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: provider,
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+            },
+        });
 
-            if (result.success) {
-                const updatedUser = { ...user, ...result.data };
-                updateUser(updatedUser);
-                return { success: true, data: result.data };
-            }
+        if (error) throw error;
+        return data;
+    };
 
-            return { success: false, error: result.error };
-        } catch (error) {
-            return { success: false, error: 'Error al generar API key' };
+    const signInWithGoogle = () => signInWithProvider('google');
+    const signInWithMicrosoft = () => signInWithProvider('azure');
+    const signInWithFacebook = () => signInWithProvider('facebook');
+
+    // Sign out
+    const signOut = async () => {
+        if (!supabase) return;
+
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+    };
+
+    // Get user profile with role
+    const getUserProfile = async () => {
+        if (!supabase || !user) return null;
+
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+        if (error) {
+            console.error('Error fetching profile:', error);
+            return null;
         }
+
+        return data;
     };
 
     const value = {
         user,
-        userType,
-        isAuthenticated,
-        isLoading,
-        login,
-        register,
-        logout,
-        updateUser,
-        generateApiKey
+        session,
+        loading,
+        signInWithGoogle,
+        signInWithMicrosoft,
+        signInWithFacebook,
+        signOut,
+        getUserProfile,
+        isAuthenticated: !!user,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
