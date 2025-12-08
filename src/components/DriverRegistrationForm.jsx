@@ -1,8 +1,9 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { StorageService } from '../services/StorageService';
-import { chileanRegions } from '../data/chileanRegions';
+import { ConfigService } from '../services/ConfigService';
 import {
     validateRUT,
     formatRUT,
@@ -19,6 +20,16 @@ function DriverRegistrationForm() {
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
     const totalSteps = 5;
+    const [allowedRegions, setAllowedRegions] = useState([]);
+
+    useEffect(() => {
+        // Fetch allowed regions configuration
+        const fetchConfig = async () => {
+            const regions = await ConfigService.getAllowedRegions();
+            setAllowedRegions(regions);
+        };
+        fetchConfig();
+    }, []);
 
     const [formData, setFormData] = useState({
         // Step 1: Personal Information
@@ -475,9 +486,11 @@ function DriverRegistrationForm() {
                                     onBlur={handleBlur}
                                 >
                                     <option value="">Selecciona una región</option>
-                                    {chileanRegions.map(region => (
-                                        <option key={region.id} value={region.name}>{region.name}</option>
-                                    ))}
+                                    {chileanRegions
+                                        .filter(region => allowedRegions.includes(region.name))
+                                        .map(region => (
+                                            <option key={region.id} value={region.name}>{region.name}</option>
+                                        ))}
                                 </select>
                                 {errors.region && touched.region && (
                                     <span className="form-error">{errors.region}</span>
