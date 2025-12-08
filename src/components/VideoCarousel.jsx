@@ -15,7 +15,7 @@ const VideoCarousel = () => {
       id: 2,
       title: "2. Empaque Eco",
       description: "Utilizamos materiales 100% reciclables o compostables.",
-      image: "/assets/carousel-1.png", // Reusing image 1 temporarily or use a placeholder color
+      image: "/assets/carousel-2.png",
       icon: "📦"
     },
     {
@@ -29,7 +29,7 @@ const VideoCarousel = () => {
       id: 4,
       title: "4. Entrega Feliz",
       description: "Recibe tu pedido sabiendo que ayudaste al planeta.",
-      image: "/assets/carousel-3.png", // Reusing image 3 temporarily
+      image: "/assets/carousel-4.png",
       icon: "😊"
     }
   ];
