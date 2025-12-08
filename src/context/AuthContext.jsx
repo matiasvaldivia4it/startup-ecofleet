@@ -127,6 +127,26 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // Update user profile
+    const updateProfile = async (updates) => {
+        if (!supabase || !user) return { success: true }; // Mock success
+
+        try {
+            const { error } = await supabase.auth.updateUser({
+                data: updates
+            });
+
+            if (error) throw error;
+
+            // Update local state
+            setUser(prev => ({ ...prev, user_metadata: { ...prev.user_metadata, ...updates } }));
+            return { success: true };
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            return { success: false, error: error.message };
+        }
+    };
+
     // Sign out
     const signOut = async () => {
         if (!supabase) return;
@@ -162,6 +182,7 @@ export const AuthProvider = ({ children }) => {
         signInWithFacebook,
         login,
         register,
+        updateProfile,
         signOut,
         getUserProfile,
         isAuthenticated: !!user,

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { StorageService } from '../services/StorageService';
 import { chileanRegions } from '../data/chileanRegions';
 import {
     validateRUT,
@@ -106,6 +107,16 @@ function DriverRegistrationForm() {
         }));
     };
 
+    const handleFileChange = (e, field) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFormData(prev => ({
+                ...prev,
+                [field]: file
+            }));
+        }
+    };
+
     const validateField = (name, value) => {
         let error = '';
 
@@ -203,7 +214,7 @@ function DriverRegistrationForm() {
         window.scrollTo(0, 0);
     };
 
-    const { register, signInWithGoogle, user, isAuthenticated } = useAuth();
+    const { register, signInWithGoogle, user, isAuthenticated, updateProfile } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
 
@@ -229,6 +240,34 @@ function DriverRegistrationForm() {
         }
     };
 
+    const uploadDocuments = async (userId) => {
+        const documents = [
+            { field: 'driversLicensePhoto', path: 'license' },
+            { field: 'vehicleRegistration', path: 'registration' },
+            { field: 'insuranceCertificate', path: 'insurance' },
+            { field: 'profilePhoto', path: 'profile' }
+        ];
+
+        const updates = {};
+
+        for (const doc of documents) {
+            const file = formData[doc.field];
+            if (file) {
+                const { url, error } = await StorageService.uploadFile(
+                    file,
+                    'driver-documents',
+                    `${userId}/${doc.path}`
+                );
+
+                if (!error && url) {
+                    updates[`${doc.field}Url`] = url;
+                }
+            }
+        }
+
+        return updates;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitError('');
@@ -236,15 +275,15 @@ function DriverRegistrationForm() {
         if (validateStep(currentStep)) {
             setIsSubmitting(true);
             try {
-                // If user is already authenticated (e.g. Google), we might skip 'register' and just update profile
-                // But for this flow, we'll assume 'register' handles upsert or we just use the data
-
                 let result;
-                if (isAuthenticated) {
-                    // User already exists (Google), just navigate or update profile
-                    // For this demo, we assume success and navigate
-                    result = { success: true };
+                let userId;
+
+                if (isAuthenticated && user) {
+                    // User already exists (Google)
+                    result = { success: true, user: user };
+                    userId = user.id;
                 } else {
+                    // Register new user
                     result = await register(
                         formData.email,
                         formData.password,
@@ -261,9 +300,20 @@ function DriverRegistrationForm() {
                             licensePlate: formData.licensePlate
                         }
                     );
+                    if (result.success) {
+                        userId = result.user.id;
+                    }
                 }
 
-                if (result.success) {
+                if (result.success && userId) {
+                    // Upload documents
+                    const documentUpdates = await uploadDocuments(userId);
+
+                    // Update profile with document URLs
+                    if (Object.keys(documentUpdates).length > 0) {
+                        await updateProfile(documentUpdates);
+                    }
+
                     // Navigate to dashboard
                     navigate('/dashboard');
                 } else {
@@ -699,43 +749,74 @@ function DriverRegistrationForm() {
                                 <div className="upload-icon">📄</div>
                                 <h4>Licencia de Conducir</h4>
                                 <p>Foto clara de ambos lados</p>
-                                <button type="button" className="btn btn-outline btn-sm">
-                                    Subir Archivo
-                                </button>
+                                <input
+                                    type="file"
+                                    id="driversLicensePhoto"
+                                    className="hidden-input"
+                                    onChange={(e) => handleFileChange(e, 'driversLicensePhoto')}
+                                    accept="image/*,.pdf"
+                                />
+                                <label htmlFor="driversLicensePhoto" className={`btn btn-sm ${formData.driversLicensePhoto ? 'btn-success' : 'btn-outline'}`}>
+                                    {formData.driversLicensePhoto ? 'Archivo Seleccionado' : 'Subir Archivo'}
+                                </label>
+                                {formData.driversLicensePhoto && <span className="file-name">{formData.driversLicensePhoto.name}</span>}
                             </div>
 
                             <div className="upload-card">
                                 <div className="upload-icon">🚗</div>
                                 <h4>Permiso de Circulación</h4>
                                 <p>Documento vigente del vehículo</p>
-                                <button type="button" className="btn btn-outline btn-sm">
-                                    Subir Archivo
-                                </button>
+                                <input
+                                    type="file"
+                                    id="vehicleRegistration"
+                                    className="hidden-input"
+                                    onChange={(e) => handleFileChange(e, 'vehicleRegistration')}
+                                    accept="image/*,.pdf"
+                                />
+                                <label htmlFor="vehicleRegistration" className={`btn btn-sm ${formData.vehicleRegistration ? 'btn-success' : 'btn-outline'}`}>
+                                    {formData.vehicleRegistration ? 'Archivo Seleccionado' : 'Subir Archivo'}
+                                </label>
+                                {formData.vehicleRegistration && <span className="file-name">{formData.vehicleRegistration.name}</span>}
                             </div>
 
                             <div className="upload-card">
                                 <div className="upload-icon">🛡️</div>
                                 <h4>Seguro Obligatorio</h4>
                                 <p>SOAP vigente</p>
-                                <button type="button" className="btn btn-outline btn-sm">
-                                    Subir Archivo
-                                </button>
+                                <input
+                                    type="file"
+                                    id="insuranceCertificate"
+                                    className="hidden-input"
+                                    onChange={(e) => handleFileChange(e, 'insuranceCertificate')}
+                                    accept="image/*,.pdf"
+                                />
+                                <label htmlFor="insuranceCertificate" className={`btn btn-sm ${formData.insuranceCertificate ? 'btn-success' : 'btn-outline'}`}>
+                                    {formData.insuranceCertificate ? 'Archivo Seleccionado' : 'Subir Archivo'}
+                                </label>
+                                {formData.insuranceCertificate && <span className="file-name">{formData.insuranceCertificate.name}</span>}
                             </div>
 
                             <div className="upload-card">
                                 <div className="upload-icon">👤</div>
                                 <h4>Foto de Perfil</h4>
                                 <p>Foto reciente tipo carnet</p>
-                                <button type="button" className="btn btn-outline btn-sm">
-                                    Subir Archivo
-                                </button>
+                                <input
+                                    type="file"
+                                    id="profilePhoto"
+                                    className="hidden-input"
+                                    onChange={(e) => handleFileChange(e, 'profilePhoto')}
+                                    accept="image/*"
+                                />
+                                <label htmlFor="profilePhoto" className={`btn btn-sm ${formData.profilePhoto ? 'btn-success' : 'btn-outline'}`}>
+                                    {formData.profilePhoto ? 'Archivo Seleccionado' : 'Subir Archivo'}
+                                </label>
+                                {formData.profilePhoto && <span className="file-name">{formData.profilePhoto.name}</span>}
                             </div>
                         </div>
 
                         <div className="info-box">
                             <p>
-                                <strong>Nota:</strong> En esta demo, la carga de archivos está simulada.
-                                En producción, podrás subir tus documentos de forma segura.
+                                <strong>Nota:</strong> Los documentos serán verificados por nuestro equipo en un plazo de 24 horas.
                             </p>
                         </div>
                     </div>
@@ -907,6 +988,27 @@ function DriverRegistrationForm() {
 
         .divider span {
             padding: 0 var(--space-4);
+        }
+
+        .hidden-input {
+            display: none;
+        }
+
+        .file-name {
+            display: block;
+            font-size: var(--font-size-xs);
+            color: var(--color-gray-600);
+            margin-top: var(--space-2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .btn-success {
+            background-color: var(--color-success-100);
+            color: var(--color-success-700);
+            border-color: var(--color-success-300);
         }
 
         .registration-form-container {
