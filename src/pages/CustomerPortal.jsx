@@ -7,225 +7,286 @@ import OrderCreationForm from '../components/OrderCreationForm';
 import Footer from '../components/Footer';
 
 function CustomerPortal() {
-    const { user, login, isAuthenticated } = useAuth();
-    const { orders, createOrder, fetchOrders, isLoading } = useOrders();
-    const [activeTab, setActiveTab] = useState('orders');
-    const [showCreateForm, setShowCreateForm] = useState(false);
-    const [apiCredentials, setApiCredentials] = useState(null);
+  const { user, login, isAuthenticated } = useAuth();
+  const { orders, createOrder, fetchOrders, isLoading } = useOrders();
+  const [activeTab, setActiveTab] = useState('orders');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [apiCredentials, setApiCredentials] = useState(null);
 
-    // Auto-login with demo customer for testing
-    useEffect(() => {
-        if (!isAuthenticated) {
-            const demoCustomer = getDemoCustomer();
-            login(demoCustomer.email, 'demo', 'customer');
-            setApiCredentials({
-                apiKey: demoCustomer.apiKey,
-                apiSecret: demoCustomer.apiSecret
-            });
-        }
-    }, []);
+  // Auto-login with demo customer for testing
+  useEffect(() => {
+    if (!isAuthenticated) {
+      const demoCustomer = getDemoCustomer();
+      login(demoCustomer.email, 'demo', 'customer');
+      setApiCredentials({
+        apiKey: demoCustomer.apiKey,
+        apiSecret: demoCustomer.apiSecret
+      });
+    }
+  }, []);
 
-    useEffect(() => {
-        if (isAuthenticated) {
-            fetchOrders();
-        }
-    }, [isAuthenticated]);
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchOrders();
+    }
+  }, [isAuthenticated]);
 
-    const handleCreateOrder = async (orderData) => {
-        const result = await createOrder(orderData);
-        if (result.success) {
-            setShowCreateForm(false);
-            setActiveTab('orders');
-        }
+  const handleCreateOrder = async (orderData) => {
+    const result = await createOrder(orderData);
+    if (result.success) {
+      setShowCreateForm(false);
+      setActiveTab('orders');
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const statusInfo = {
+      pending: { label: 'Pendiente', class: 'badge-warning' },
+      assigned: { label: 'Asignado', class: 'badge-info' },
+      picked_up: { label: 'Recogido', class: 'badge-primary' },
+      in_transit: { label: 'En Tránsito', class: 'badge-electric' },
+      delivered: { label: 'Entregado', class: 'badge-success' },
+      cancelled: { label: 'Cancelado', class: 'badge-error' }
     };
+    const info = statusInfo[status] || statusInfo.pending;
+    return <span className={`badge ${info.class}`}>{info.label}</span>;
+  };
 
-    const getStatusBadge = (status) => {
-        const statusInfo = {
-            pending: { label: 'Pendiente', class: 'badge-warning' },
-            assigned: { label: 'Asignado', class: 'badge-info' },
-            picked_up: { label: 'Recogido', class: 'badge-primary' },
-            in_transit: { label: 'En Tránsito', class: 'badge-electric' },
-            delivered: { label: 'Entregado', class: 'badge-success' },
-            cancelled: { label: 'Cancelado', class: 'badge-error' }
-        };
-        const info = statusInfo[status] || statusInfo.pending;
-        return <span className={`badge ${info.class}`}>{info.label}</span>;
-    };
+  return (
+    <div className="customer-portal-page">
+      <header className="portal-header">
+        <div className="container">
+          <Link to="/" className="logo-link">
+            <h2 className="logo">
+              <span className="text-gradient">EcoFleet</span> Cliente
+            </h2>
+          </Link>
+          <nav className="portal-nav">
+            <Link to="/" className="nav-link">Inicio</Link>
+            <span className="nav-user">👤 {user?.name || 'Cliente'}</span>
+          </nav>
+        </div>
+      </header>
 
-    return (
-        <div className="customer-portal-page">
-            <header className="portal-header">
-                <div className="container">
-                    <Link to="/" className="logo-link">
-                        <h2 className="logo">
-                            <span className="text-gradient">EcoFleet</span> Cliente
-                        </h2>
-                    </Link>
-                    <nav className="portal-nav">
-                        <Link to="/" className="nav-link">Inicio</Link>
-                        <span className="nav-user">👤 {user?.name || 'Cliente'}</span>
-                    </nav>
+      <section className="portal-section">
+        <div className="container">
+          <div className="portal-welcome">
+            <h1 className="welcome-title">Portal de Cliente</h1>
+            <p className="welcome-subtitle">
+              Gestiona tus entregas ecológicas de forma simple y eficiente
+            </p>
+          </div>
+
+          <div className="portal-tabs">
+            <button
+              className={`tab-button ${activeTab === 'orders' ? 'active' : ''}`}
+              onClick={() => setActiveTab('orders')}
+            >
+              📦 Mis Órdenes
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'create' ? 'active' : ''}`}
+              onClick={() => setActiveTab('create')}
+            >
+              ➕ Nueva Orden
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'api' ? 'active' : ''}`}
+              onClick={() => setActiveTab('api')}
+            >
+              🔑 API
+            </button>
+          </div>
+
+          <div className="portal-content">
+            {activeTab === 'orders' && (
+              <div className="orders-tab">
+                <div className="tab-header">
+                  <h2>Mis Órdenes</h2>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => setActiveTab('create')}
+                  >
+                    + Nueva Orden
+                  </button>
                 </div>
-            </header>
 
-            <section className="portal-section">
-                <div className="container">
-                    <div className="portal-welcome">
-                        <h1 className="welcome-title">Portal de Cliente</h1>
-                        <p className="welcome-subtitle">
-                            Gestiona tus entregas ecológicas de forma simple y eficiente
-                        </p>
-                    </div>
-
-                    <div className="portal-tabs">
-                        <button
-                            className={`tab-button ${activeTab === 'orders' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('orders')}
-                        >
-                            📦 Mis Órdenes
-                        </button>
-                        <button
-                            className={`tab-button ${activeTab === 'create' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('create')}
-                        >
-                            ➕ Nueva Orden
-                        </button>
-                        <button
-                            className={`tab-button ${activeTab === 'api' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('api')}
-                        >
-                            🔑 API
-                        </button>
-                    </div>
-
-                    <div className="portal-content">
-                        {activeTab === 'orders' && (
-                            <div className="orders-tab">
-                                <div className="tab-header">
-                                    <h2>Mis Órdenes</h2>
-                                    <button
-                                        className="btn btn-primary"
-                                        onClick={() => setActiveTab('create')}
-                                    >
-                                        + Nueva Orden
-                                    </button>
-                                </div>
-
-                                {isLoading ? (
-                                    <div className="loading-state">Cargando órdenes...</div>
-                                ) : orders.length === 0 ? (
-                                    <div className="empty-state card">
-                                        <div className="empty-icon">📦</div>
-                                        <h3>No tienes órdenes aún</h3>
-                                        <p>Crea tu primera orden para comenzar</p>
-                                        <button
-                                            className="btn btn-primary"
-                                            onClick={() => setActiveTab('create')}
-                                        >
-                                            Crear Primera Orden
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="orders-grid">
-                                        {orders.map(order => (
-                                            <div key={order.id} className="order-card card">
-                                                <div className="order-header">
-                                                    <div>
-                                                        <div className="order-id">#{order.trackingNumber}</div>
-                                                        <div className="order-date">
-                                                            {new Date(order.createdAt).toLocaleDateString('es-CL')}
-                                                        </div>
-                                                    </div>
-                                                    {getStatusBadge(order.status)}
-                                                </div>
-
-                                                <div className="order-body">
-                                                    <div className="address-info">
-                                                        <div className="address-item">
-                                                            <span className="address-label">📍 Recogida:</span>
-                                                            <span className="address-text">
-                                                                {order.pickupAddress.commune}, {order.pickupAddress.region}
-                                                            </span>
-                                                        </div>
-                                                        <div className="address-item">
-                                                            <span className="address-label">🎯 Entrega:</span>
-                                                            <span className="address-text">
-                                                                {order.deliveryAddress.commune}, {order.deliveryAddress.region}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    {order.driverName && (
-                                                        <div className="driver-info">
-                                                            <span className="driver-icon">👤</span>
-                                                            <span>Conductor: {order.driverName}</span>
-                                                        </div>
-                                                    )}
-
-                                                    <div className="order-footer">
-                                                        <span className="order-cost">
-                                                            ${order.cost.toLocaleString('es-CL')}
-                                                        </span>
-                                                        <button className="btn btn-outline btn-sm">
-                                                            Ver Detalles
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+                {isLoading ? (
+                  <div className="loading-state">Cargando órdenes...</div>
+                ) : orders.length === 0 ? (
+                  <div className="empty-state card">
+                    <div className="empty-icon">📦</div>
+                    <h3>No tienes órdenes aún</h3>
+                    <p>Crea tu primera orden para comenzar</p>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => setActiveTab('create')}
+                    >
+                      Crear Primera Orden
+                    </button>
+                  </div>
+                ) : (
+                  <div className="orders-grid">
+                    {orders.map(order => (
+                      <div key={order.id} className="order-card card">
+                        <div className="order-header">
+                          <div>
+                            <div className="order-id">#{order.trackingNumber}</div>
+                            <div className="order-date">
+                              {new Date(order.createdAt).toLocaleDateString('es-CL')}
                             </div>
-                        )}
+                          </div>
+                          {getStatusBadge(order.status)}
+                        </div>
 
-                        {activeTab === 'create' && (
-                            <div className="create-tab">
-                                <div className="tab-header">
-                                    <h2>Crear Nueva Orden</h2>
-                                </div>
-                                <OrderCreationForm
-                                    onSubmit={handleCreateOrder}
-                                    onCancel={() => setActiveTab('orders')}
-                                />
+                        <div className="order-body">
+                          <div className="address-info">
+                            <div className="address-item">
+                              <span className="address-label">📍 Recogida:</span>
+                              <span className="address-text">
+                                {order.pickupAddress.commune}, {order.pickupAddress.region}
+                              </span>
                             </div>
-                        )}
+                            <div className="address-item">
+                              <span className="address-label">🎯 Entrega:</span>
+                              <span className="address-text">
+                                {order.deliveryAddress.commune}, {order.deliveryAddress.region}
+                              </span>
+                            </div>
+                          </div>
 
-                        {activeTab === 'api' && (
-                            <div className="api-tab">
-                                <div className="tab-header">
-                                    <h2>Integración API</h2>
-                                </div>
+                          {order.driverName && (
+                            <div className="driver-info">
+                              <span className="driver-icon">👤</span>
+                              <span>Conductor: {order.driverName}</span>
+                            </div>
+                          )}
 
-                                <div className="api-section card">
-                                    <h3>Credenciales API</h3>
-                                    <p className="api-description">
-                                        Usa estas credenciales para integrar EcoFleet con tu sistema ERP
-                                    </p>
+                          <div className="order-footer">
+                            <span className="order-cost">
+                              ${order.cost.toLocaleString('es-CL')}
+                            </span>
+                            <button className="btn btn-outline btn-sm">
+                              Ver Detalles
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
-                                    {apiCredentials && (
-                                        <div className="credentials-box">
-                                            <div className="credential-item">
-                                                <label>API Key:</label>
-                                                <code className="credential-value">{apiCredentials.apiKey}</code>
-                                            </div>
-                                            <div className="credential-item">
-                                                <label>API Secret:</label>
-                                                <code className="credential-value">{apiCredentials.apiSecret}</code>
-                                            </div>
-                                        </div>
-                                    )}
+            {activeTab === 'create' && (
+              <div className="create-tab">
+                <div className="tab-header">
+                  <h2>Crear Nueva Orden</h2>
+                </div>
+                <OrderCreationForm
+                  onSubmit={handleCreateOrder}
+                  onCancel={() => setActiveTab('orders')}
+                />
+              </div>
+            )}
 
-                                    <div className="api-warning">
-                                        <strong>⚠️ Importante:</strong> Mantén estas credenciales seguras. No las compartas públicamente.
-                                    </div>
-                                </div>
 
-                                <div className="api-section card">
-                                    <h3>Ejemplo de Uso</h3>
-                                    <p>Crear una orden mediante API:</p>
 
-                                    <pre className="code-block">
-                                        {`curl -X POST https://api.ecofleet.cl/v1/orders \\
+            {activeTab === 'impact' && (
+              <div className="impact-tab">
+                <div className="tab-header">
+                  <h2>Mi Impacto Ambiental 🌍</h2>
+                </div>
+
+                <div className="impact-stats-grid">
+                  <div className="stat-card card highlight">
+                    <div className="stat-icon">🌱</div>
+                    <div className="stat-value">12.5 kg</div>
+                    <div className="stat-label">CO2 Ahorrado</div>
+                    <div className="stat-subtext">vs. transporte diésel</div>
+                  </div>
+                  <div className="stat-card card">
+                    <div className="stat-icon">🌳</div>
+                    <div className="stat-value">0.6</div>
+                    <div className="stat-label">Árboles Equivalentes</div>
+                    <div className="stat-subtext">absorción anual</div>
+                  </div>
+                  <div className="stat-card card">
+                    <div className="stat-icon">⚡</div>
+                    <div className="stat-value">45 km</div>
+                    <div className="stat-label">Recorridos en Eléctrico</div>
+                    <div className="stat-subtext">100% cero emisiones</div>
+                  </div>
+                </div>
+
+                <div className="impact-chart-section card">
+                  <h3>Ahorro de Emisiones por Mes</h3>
+                  <div className="chart-placeholder">
+                    <div className="bar" style={{ height: '40%' }}><span className="bar-label">Ene</span></div>
+                    <div className="bar" style={{ height: '60%' }}><span className="bar-label">Feb</span></div>
+                    <div className="bar" style={{ height: '30%' }}><span className="bar-label">Mar</span></div>
+                    <div className="bar" style={{ height: '80%' }}><span className="bar-label">Abr</span></div>
+                    <div className="bar" style={{ height: '50%' }}><span className="bar-label">May</span></div>
+                    <div className="bar" style={{ height: '75%' }}><span className="bar-label">Jun</span></div>
+                  </div>
+                </div>
+
+                <div className="eco-tips-section">
+                  <h3>Tips para reducir tu huella</h3>
+                  <div className="tips-grid">
+                    <div className="tip-card">
+                      <h4>📦 Elige Empaques Sustentables</h4>
+                      <p>Prefiere opciones biodegradables o reutilizables en tus envíos.</p>
+                    </div>
+                    <div className="tip-card">
+                      <h4>🚚 Consolida Envíos</h4>
+                      <p>Agrupa varios pedidos en una sola recolección para reducir viajes.</p>
+                    </div>
+                    <div className="tip-card">
+                      <h4>🕒 Horarios Flexibles</h4>
+                      <p>Permite ventanas de entrega más amplias para optimizar rutas.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'api' && (
+              <div className="api-tab">
+                <div className="tab-header">
+                  <h2>Integración API</h2>
+                </div>
+
+                <div className="api-section card">
+                  <h3>Credenciales API</h3>
+                  <p className="api-description">
+                    Usa estas credenciales para integrar EcoFleet con tu sistema ERP
+                  </p>
+
+                  {apiCredentials && (
+                    <div className="credentials-box">
+                      <div className="credential-item">
+                        <label>API Key:</label>
+                        <code className="credential-value">{apiCredentials.apiKey}</code>
+                      </div>
+                      <div className="credential-item">
+                        <label>API Secret:</label>
+                        <code className="credential-value">{apiCredentials.apiSecret}</code>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="api-warning">
+                    <strong>⚠️ Importante:</strong> Mantén estas credenciales seguras. No las compartas públicamente.
+                  </div>
+                </div>
+
+                <div className="api-section card">
+                  <h3>Ejemplo de Uso</h3>
+                  <p>Crear una orden mediante API:</p>
+
+                  <pre className="code-block">
+                    {`curl -X POST https://api.ecofleet.cl/v1/orders \\
   -H "Authorization: Bearer ${apiCredentials?.apiKey || 'YOUR_API_KEY'}" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -245,28 +306,28 @@ function CustomerPortal() {
       "description": "Documentos"
     }
   }'`}
-                                    </pre>
-                                </div>
-
-                                <div className="api-section card">
-                                    <h3>Documentación Completa</h3>
-                                    <p>
-                                        Consulta la documentación completa de la API para más detalles sobre endpoints,
-                                        autenticación, webhooks y ejemplos de integración.
-                                    </p>
-                                    <Link to="/api-docs" className="btn btn-primary">
-                                        Ver Documentación API
-                                    </Link>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                  </pre>
                 </div>
-            </section>
 
-            <Footer />
+                <div className="api-section card">
+                  <h3>Documentación Completa</h3>
+                  <p>
+                    Consulta la documentación completa de la API para más detalles sobre endpoints,
+                    autenticación, webhooks y ejemplos de integración.
+                  </p>
+                  <Link to="/api-docs" className="btn btn-primary">
+                    Ver Documentación API
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
 
-            <style jsx>{`
+      <Footer />
+
+      <style jsx>{`
         .customer-portal-page {
           min-height: 100vh;
           background: var(--color-gray-50);
@@ -584,9 +645,120 @@ function CustomerPortal() {
             display: none;
           }
         }
+
+        .impact-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: var(--space-6);
+          margin-bottom: var(--space-8);
+        }
+
+        .stat-card {
+          text-align: center;
+          padding: var(--space-6);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .stat-card.highlight {
+          background: linear-gradient(135deg, var(--color-primary-50), var(--color-electric-50));
+          border: 2px solid var(--color-primary-200);
+        }
+
+        .stat-icon {
+          font-size: 3rem;
+          margin-bottom: var(--space-3);
+        }
+
+        .stat-value {
+          font-size: var(--font-size-4xl);
+          font-weight: 800;
+          color: var(--color-gray-900);
+          line-height: 1;
+          margin-bottom: var(--space-2);
+        }
+
+        .stat-label {
+          font-size: var(--font-size-lg);
+          font-weight: 600;
+          color: var(--color-gray-700);
+          margin-bottom: var(--space-1);
+        }
+
+        .stat-subtext {
+          font-size: var(--font-size-sm);
+          color: var(--color-gray-500);
+        }
+
+        .impact-chart-section {
+          padding: var(--space-6);
+          margin-bottom: var(--space-8);
+        }
+
+        .chart-placeholder {
+          height: 200px;
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-around;
+          padding-top: var(--space-8);
+          border-bottom: 2px solid var(--color-gray-200);
+        }
+
+        .bar {
+          width: 40px;
+          background: var(--color-primary-500);
+          border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+          position: relative;
+          transition: height 0.5s ease;
+        }
+
+        .bar:hover {
+          background: var(--color-primary-600);
+        }
+
+        .bar-label {
+          position: absolute;
+          bottom: -25px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: var(--font-size-sm);
+          color: var(--color-gray-600);
+        }
+
+        .eco-tips-section h3 {
+          font-size: var(--font-size-xl);
+          margin-bottom: var(--space-6);
+        }
+
+        .tips-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: var(--space-6);
+        }
+
+        .tip-card {
+          background: white;
+          padding: var(--space-6);
+          border-radius: var(--radius-lg);
+          border-left: 4px solid var(--color-secondary-500);
+          box-shadow: var(--shadow-sm);
+        }
+
+        .tip-card h4 {
+          font-size: var(--font-size-lg);
+          margin-bottom: var(--space-2);
+          color: var(--color-gray-900);
+        }
+
+        .tip-card p {
+          color: var(--color-gray-600);
+          margin: 0;
+        }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 }
 
 export default CustomerPortal;

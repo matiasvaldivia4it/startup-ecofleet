@@ -64,6 +64,19 @@ export const AuthProvider = ({ children }) => {
     const signInWithMicrosoft = () => signInWithProvider('azure');
     const signInWithFacebook = () => signInWithProvider('facebook');
 
+    // Mock login for development
+    const login = (email, role = 'customer') => {
+        const mockUser = {
+            id: 'dev-user-123',
+            email: email,
+            role: role,
+            name: 'Usuario Demo'
+        };
+        setUser(mockUser);
+        setSession({ user: mockUser });
+        return { success: true };
+    };
+
     // Sign out
     const signOut = async () => {
         if (!supabase) return;
@@ -97,6 +110,7 @@ export const AuthProvider = ({ children }) => {
         signInWithGoogle,
         signInWithMicrosoft,
         signInWithFacebook,
+        login,
         signOut,
         getUserProfile,
         isAuthenticated: !!user,

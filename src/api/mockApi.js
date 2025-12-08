@@ -1,31 +1,108 @@
 import { Order } from '../models/Order';
 import { Customer } from '../models/Customer';
+import Driver from '../models/Driver';
+import { findBestDriver, assignDriverToOrder } from '../services/driverAssignment';
 
 // Mock database
 let orders = [];
 let customers = [];
 let drivers = [
-    {
+    new Driver({
         id: 'DRV-001',
-        name: 'Juan Pérez',
+        name: 'Carlos Muñoz',
+        email: 'carlos.munoz@ecofleet.cl',
+        phone: '+56 9 8765 4321',
         status: 'available',
-        vehicleType: 'electric-car',
-        currentLocation: { lat: -33.4489, lng: -70.6693 }
-    },
-    {
+        currentLocation: {
+            lat: -33.4489,
+            lng: -70.6693, // Santiago Centro
+            lastUpdated: new Date().toISOString()
+        },
+        vehicle: {
+            type: 'scooter',
+            maxWeight: 30,
+            maxVolume: 100,
+            licensePlate: 'ABCD12',
+            brand: 'Honda',
+            model: 'PCX 150'
+        },
+        activeOrders: 0,
+        maxConcurrentOrders: 3,
+        rating: 4.8,
+        totalDeliveries: 145
+    }),
+    new Driver({
         id: 'DRV-002',
         name: 'María González',
+        email: 'maria.gonzalez@ecofleet.cl',
+        phone: '+56 9 7654 3210',
         status: 'available',
-        vehicleType: 'electric-bike',
-        currentLocation: { lat: -33.4372, lng: -70.6506 }
-    },
-    {
+        currentLocation: {
+            lat: -33.4372,
+            lng: -70.6506, // Providencia
+            lastUpdated: new Date().toISOString()
+        },
+        vehicle: {
+            type: 'bicycle',
+            maxWeight: 15,
+            maxVolume: 50,
+            licensePlate: 'N/A',
+            brand: 'Trek',
+            model: 'FX 3'
+        },
+        activeOrders: 0,
+        maxConcurrentOrders: 2,
+        rating: 4.9,
+        totalDeliveries: 89
+    }),
+    new Driver({
         id: 'DRV-003',
-        name: 'Carlos Rodríguez',
+        name: 'Roberto Silva',
+        email: 'roberto.silva@ecofleet.cl',
+        phone: '+56 9 6543 2109',
+        status: 'available',
+        currentLocation: {
+            lat: -33.4569,
+            lng: -70.6483, // Las Condes
+            lastUpdated: new Date().toISOString()
+        },
+        vehicle: {
+            type: 'van',
+            maxWeight: 500,
+            maxVolume: 3000,
+            licensePlate: 'WXYZ99',
+            brand: 'Nissan',
+            model: 'e-NV200'
+        },
+        activeOrders: 0,
+        maxConcurrentOrders: 5,
+        rating: 4.7,
+        totalDeliveries: 234
+    }),
+    new Driver({
+        id: 'DRV-004',
+        name: 'Ana Martínez',
+        email: 'ana.martinez@ecofleet.cl',
+        phone: '+56 9 5432 1098',
         status: 'busy',
-        vehicleType: 'electric-scooter',
-        currentLocation: { lat: -33.4569, lng: -70.6483 }
-    }
+        currentLocation: {
+            lat: -33.4250,
+            lng: -70.6100, // Vitacura
+            lastUpdated: new Date().toISOString()
+        },
+        vehicle: {
+            type: 'motorcycle',
+            maxWeight: 50,
+            maxVolume: 150,
+            licensePlate: 'MOTO88',
+            brand: 'Zero',
+            model: 'SR/F'
+        },
+        activeOrders: 2,
+        maxConcurrentOrders: 3,
+        rating: 5.0,
+        totalDeliveries: 312
+    })
 ];
 
 // Initialize with demo customer
@@ -132,6 +209,18 @@ export const mockApi = {
 
             orders.push(order);
 
+            // Attempt automatic driver assignment
+            const assignmentResult = findBestDriver(order, drivers);
+
+            if (assignmentResult.success) {
+                // Assign the best driver
+                assignDriverToOrder(order, assignmentResult.driver, assignmentResult.distance);
+                console.log(`[AUTO-ASSIGN] Order ${order.id} assigned to ${assignmentResult.driver.name} (${assignmentResult.distance}km away)`);
+            } else {
+                console.log(`[AUTO-ASSIGN] Failed for order ${order.id}: ${assignmentResult.reason}`);
+                // Order remains in 'pending' status for manual assignment
+            }
+
             // Update customer stats
             const customer = customers.find(c => c.id === order.customerId);
             if (customer) {
@@ -142,7 +231,15 @@ export const mockApi = {
             if (customer && customer.webhookUrl) {
                 this.sendWebhook(customer.webhookUrl, {
                     event: 'order.created',
-                    order: order.toJSON()
+                    order: order.toJSON(),
+                    assignment: assignmentResult.success ? {
+                        method: 'auto',
+                        driver: assignmentResult.driver.name,
+                        distance: assignmentResult.distance
+                    } : {
+                        method: 'pending',
+                        reason: assignmentResult.reason
+                    }
                 });
             }
 

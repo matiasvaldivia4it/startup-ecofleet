@@ -270,14 +270,15 @@ function OrderCreationForm({ onSubmit, onCancel }) {
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Tipo de Paquete</label>
+                        <label className="form-label">Tipo de Empaque</label>
                         <select
                             className="form-select"
                             value={formData.package.type}
                             onChange={(e) => handleInputChange(e, 'package', 'type')}
                         >
-                            <option value="standard">Estándar</option>
-                            <option value="express">Express</option>
+                            <option value="standard">Estándar (Reciclable)</option>
+                            <option value="biodegradable">Biodegradable (Compostable) +$500</option>
+                            <option value="reusable">Reutilizable (Retornable) +$1.000</option>
                             <option value="fragile">Frágil</option>
                             <option value="food">Alimentos</option>
                             <option value="documents">Documentos</option>
