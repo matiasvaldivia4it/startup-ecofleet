@@ -52,7 +52,9 @@ export const AuthProvider = ({ children }) => {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: provider,
             options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
+                options: {
+                    redirectTo: `${import.meta.env.VITE_SITE_URL || window.location.origin}/auth/callback`,
+                },
             },
         });
 
