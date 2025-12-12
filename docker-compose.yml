@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  ecofleet-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecofleet-app
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - ecofleet-network
+    labels:
+      - "com.ecofleet.description=EcoFleet Driver Application"
+      - "com.ecofleet.version=1.0.0"
+
+networks:
+  ecofleet-network:
+    driver: bridge
+
+# Optional: Add volumes for logs or persistent data
+# volumes:
+#   nginx-logs:

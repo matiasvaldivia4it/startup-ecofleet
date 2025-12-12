@@ -7,13 +7,19 @@ import Driver from '../models/Driver';
 
 /**
  * Calculate distance between two points using Haversine formula
- * @param {number} lat1 - Latitude of point 1
- * @param {number} lon1 - Longitude of point 1
- * @param {number} lat2 - Latitude of point 2
- * @param {number} lon2 - Longitude of point 2
- * @returns {number} Distance in kilometers
+ * @param {number} lat1 - Latitude of point 1 (in degrees)
+ * @param {number} lon1 - Longitude of point 1 (in degrees)
+ * @param {number} lat2 - Latitude of point 2 (in degrees)
+ * @param {number} lon2 - Longitude of point 2 (in degrees)
+ * @returns {number} Distance in kilometers, rounded to 2 decimal places
+ * @throws {Error} If any coordinate is not a valid number
  */
 export function calculateDistance(lat1, lon1, lat2, lon2) {
+    // Validate inputs
+    if (!isFinite(lat1) || !isFinite(lon1) || !isFinite(lat2) || !isFinite(lon2)) {
+        throw new Error('All coordinates must be valid numbers');
+    }
+
     const R = 6371; // Earth's radius in km
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
@@ -29,6 +35,11 @@ export function calculateDistance(lat1, lon1, lat2, lon2) {
     return Math.round(distance * 100) / 100; // Round to 2 decimals
 }
 
+/**
+ * Convert degrees to radians
+ * @param {number} degrees - Angle in degrees
+ * @returns {number} Angle in radians
+ */
 function toRad(degrees) {
     return degrees * (Math.PI / 180);
 }
