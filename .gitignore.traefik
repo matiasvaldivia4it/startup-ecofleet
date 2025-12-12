@@ -1,0 +1,8 @@
+# Add to .gitignore
+
+# Traefik
+letsencrypt/
+logs/traefik/
+
+# Environment
+.env

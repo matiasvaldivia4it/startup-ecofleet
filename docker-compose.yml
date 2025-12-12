@@ -1,26 +1,102 @@
 version: '3.8'
 
 services:
-  ecofleet-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: ecofleet-app
-    ports:
-      - "3000:80"
-    environment:
-      - NODE_ENV=production
+  # Traefik Load Balancer
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80" # HTTP
+      - "443:443" # HTTPS
+      - "8080:8080" # Dashboard (remove in production)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/traefik.yml:ro
+      - ./letsencrypt:/letsencrypt
+      - ./logs/traefik:/var/log/traefik
     networks:
       - ecofleet-network
     labels:
-      - "com.ecofleet.description=EcoFleet Driver Application"
-      - "com.ecofleet.version=1.0.0"
+      # Enable Traefik for this service
+      - "traefik.enable=true"
+
+      # Dashboard
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`traefik.yourdomain.com`)"
+      - "traefik.http.routers.traefik-dashboard.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik-dashboard.service=api@internal"
+
+      # Dashboard Authentication (change credentials)
+      - "traefik.http.routers.traefik-dashboard.middlewares=dashboard-auth"
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$8EVjn/nj$$GiLUZqcbueTFeD23SuB6x0" # admin:admin (CHANGE THIS)
+
+  # EcoFleet Application (with replicas)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    deploy:
+      replicas: 3 # Number of replicas for load balancing
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    environment:
+      - NODE_ENV=production
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    networks:
+      - ecofleet-network
+    labels:
+      # Enable Traefik
+      - "traefik.enable=true"
+
+      # HTTP Router
+      - "traefik.http.routers.ecofleet.rule=Host(`yourdomain.com`) || Host(`www.yourdomain.com`)"
+      - "traefik.http.routers.ecofleet.entrypoints=websecure"
+      - "traefik.http.routers.ecofleet.tls.certresolver=letsencrypt"
+
+      # Service
+      - "traefik.http.services.ecofleet.loadbalancer.server.port=80"
+
+      # Health Check
+      - "traefik.http.services.ecofleet.loadbalancer.healthcheck.path=/health"
+      - "traefik.http.services.ecofleet.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.ecofleet.loadbalancer.healthcheck.timeout=3s"
+
+      # Sticky Sessions (optional - for session persistence)
+      - "traefik.http.services.ecofleet.loadbalancer.sticky.cookie=true"
+      - "traefik.http.services.ecofleet.loadbalancer.sticky.cookie.name=ecofleet_session"
+
+      # Middlewares
+      - "traefik.http.routers.ecofleet.middlewares=security-headers,compression"
+
+      # Security Headers
+      - "traefik.http.middlewares.security-headers.headers.customResponseHeaders.X-Robots-Tag=none,noarchive,nosnippet,notranslate,noimageindex"
+      - "traefik.http.middlewares.security-headers.headers.sslRedirect=true"
+      - "traefik.http.middlewares.security-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.security-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.security-headers.headers.stsPreload=true"
+      - "traefik.http.middlewares.security-headers.headers.forceSTSHeader=true"
+      - "traefik.http.middlewares.security-headers.headers.frameDeny=true"
+      - "traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.security-headers.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.security-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+
+      # Compression
+      - "traefik.http.middlewares.compression.compress=true"
 
 networks:
   ecofleet-network:
     driver: bridge
 
-# Optional: Add volumes for logs or persistent data
-# volumes:
-#   nginx-logs:
+volumes:
+  letsencrypt:

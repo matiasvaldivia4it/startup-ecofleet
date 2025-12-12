@@ -15,6 +15,7 @@ import {
     validateLicensePlate,
     formatLicensePlate
 } from '../utils/validation';
+import { chileanRegions } from '../data/chileanRegions';
 
 function DriverRegistrationForm() {
     const navigate = useNavigate();
@@ -230,7 +231,7 @@ function DriverRegistrationForm() {
     const [submitError, setSubmitError] = useState('');
 
     // Pre-fill data if user is authenticated (e.g. from Google)
-    useState(() => {
+    useEffect(() => {
         if (isAuthenticated && user) {
             setFormData(prev => ({
                 ...prev,

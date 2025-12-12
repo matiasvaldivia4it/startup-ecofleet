@@ -20,15 +20,15 @@ function Hero() {
               <div className="primary-actions">
                 <Link to="/registro-conductor" className="btn btn-primary btn-xl pulse-animation">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 14C20.49 14 22 15.51 22 17V20C22 21.1 21.1 22 20 22H4C2.9 22 2 21.1 2 20V17C2 15.51 3.51 14 5 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeJoin="round" />
-                    <path d="M12 14V4M12 4L15 7M12 4L9 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeJoin="round" />
+                    <path d="M19 14C20.49 14 22 15.51 22 17V20C22 21.1 21.1 22 20 22H4C2.9 22 2 21.1 2 20V17C2 15.51 3.51 14 5 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M12 14V4M12 4L15 7M12 4L9 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   Regístrate como Conductor
                 </Link>
                 <Link to="/registro-cliente" className="btn btn-electric btn-xl">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 3h18v18H3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeJoin="round" />
-                    <path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeJoin="round" />
+                    <path d="M3 3h18v18H3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M12 8v8M8 12h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   Regístrate como Cliente
                 </Link>

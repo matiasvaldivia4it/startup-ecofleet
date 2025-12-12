@@ -1,0 +1,61 @@
+# Traefik Static Configuration
+# This file configures Traefik's global settings
+
+# API and Dashboard
+api:
+  dashboard: true
+  insecure: false  # Set to true only for development
+
+# Entry Points
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+
+  websecure:
+    address: ":443"
+    http:
+      tls:
+        certResolver: letsencrypt
+
+# Certificate Resolvers (Let's Encrypt)
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: your-email@example.com  # CHANGE THIS
+      storage: /letsencrypt/acme.json
+      httpChallenge:
+        entryPoint: web
+
+# Docker Provider
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: ecofleet-network
+
+# Logging
+log:
+  level: INFO
+  filePath: /var/log/traefik/traefik.log
+
+# Access Logs
+accessLog:
+  filePath: /var/log/traefik/access.log
+  bufferingSize: 100
+
+# Metrics (Prometheus)
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addServicesLabels: true
+    entryPoint: metrics
+
+# Health Check
+ping:
+  entryPoint: web
